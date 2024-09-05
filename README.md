@@ -1,2 +1,2 @@
-# JSHEM
-Project
+# SHEMS-DEMO
+SMart Home Energy Management System and Simulator

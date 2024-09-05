@@ -1,0 +1,7 @@
+streamlit
+plotly
+schedule
+email-validator
+fastapi
+uvicorn
+psycopg2-binary
