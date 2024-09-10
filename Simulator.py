@@ -41,7 +41,7 @@ def get_db_connection():
             host=hostname,
             port=port
         )
-        logging.info("DB connected")
+        
         return conn
     except psycopg2.OperationalError as e:
         logging.info(f"Error: {e}")
@@ -54,15 +54,12 @@ def simulate():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    logging.info("Running simulate function")
     # Get all appliances
     cursor.execute('''
         SELECT ApplianceID, HomeID, ApplianceCondition, StartValue, StopValue
         FROM Appliances
     ''')
     appliances = cursor.fetchall()
-
-    logging.info(f"Fetched {len(appliances)} appliances")
 
     # Loop through each appliance
     for appliance in appliances:
@@ -131,16 +128,14 @@ def simulate():
         # Insert a new observation into the energy usage table
         cursor.execute(f'''
             INSERT INTO EnergyUsage (HomeID, ApplianceID, DateTime, EnergyConsumed, EnergyProduced, CurrentOutput)
-            VALUES ({home_id}, {appliance_id}, '{str(datetime.now())}', {energy_consumed}, {energy_produced}, {current_output});
+            VALUES ({home_id}, {appliance_id}, '{now}', {energy_consumed}, {energy_produced}, {current_output});
         ''')
-        logging.info(f"Inserted new observation for ApplianceID {appliance_id} in HomeID {home_id}")
 
     conn.commit()
     conn.close()
-    logging.info("Simulation completed and database updated.")
 
 def run_scheduler():
-    schedule.every(1).minutes.do(simulate)
+    schedule.every(1).hours.do(simulate)
     while True:
         schedule.run_pending()
         time.sleep(1)
