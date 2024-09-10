@@ -756,7 +756,7 @@ elif st.session_state.page == "dashboard":
                 with cols[n_row % N_cards_per_row]:
                     # ==== Card ======
                     st.markdown(f"**{appliance['Appliance Name']}: {appliance['Appliance Description']}**", unsafe_allow_html=True)
-                    st.write(f"**Current Energy Consumption:** {str(round(appliance['Current Energy Consumption (kWh)'], 1))} kWh")
+                    st.write(f"**Current Energy Consumption:** {str(round(appliance['Current Energy Consumption (kWh)'], 4))} kWh")
                     st.write(f"**Current Output:** {str(math.floor(appliance['Current Output (°C)']))} °C")
                     
                     c1, c2 = st.columns([6,4])
