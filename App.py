@@ -77,7 +77,7 @@ def restart():
     st.session_state.page = "home" # Go back to beginning
     st.rerun()
 
-def sendmail(type, mail, homeid="", homename="", appliance_name="", appliance_type=""):
+def sendmail(type, mail, homename="", homeid="", appliance_name="", appliance_type=""):
 
     from_email = "j.smarthomesmgt@gmail.com"
     to_email = mail
@@ -86,7 +86,7 @@ def sendmail(type, mail, homeid="", homename="", appliance_name="", appliance_ty
 
     if type == "signup":
         subject = "Welcome to SHEMS"
-        body = """
+        body = f"""
                 <html>
                 <body>
                     <img src="cid:logo" alt="Logo">
@@ -95,10 +95,10 @@ def sendmail(type, mail, homeid="", homename="", appliance_name="", appliance_ty
                     <div>Your registration is now complete, and we're excited to help you manage your home's energy usage efficiently. To get started, please note down your login details:</div>
                     <ul>
                     <li>
-                    <div>Home Name: <strong>{}</strong></div>
+                    <div>Home Name: <strong>{homename}</strong></div>
                     </li>
                     <li>
-                    <div>Home ID: <strong>{}</strong></div>
+                    <div>Home ID: <strong>{homeid}</strong></div>
                     </li>
                     </ul>
                     <div>These will be your login credentials, so please remember them for future reference.</div>
@@ -110,7 +110,7 @@ def sendmail(type, mail, homeid="", homename="", appliance_name="", appliance_ty
                     <div>&nbsp;</div>
                     <div>Best regards,<br />The SHEMS Team</div>
                 </body>
-                </html>""".format(homeid, homename) 
+                </html>"""
     elif type == "add appliance":
         subject = "SHEMS - Appliance Added"
         body = """
@@ -195,7 +195,6 @@ def sendmail(type, mail, homeid="", homename="", appliance_name="", appliance_ty
     server.login(from_email, password)
     server.sendmail(from_email, to_email, msg.as_string())
     server.quit()
-
 
 def register_home(home_id, home_name, email, address="", other=""):
     """Register a new home:
@@ -374,6 +373,13 @@ elif st.session_state.page == "dashboard":
     placeholder.empty()
     # ========= Charts and Functions ==========
     def plot_metric(label, value, prefix="", suffix="", show_graph=False, color_graph=""):
+        
+        color = None
+        if label == "Energy Saved" and float(value) < 0: # If Energy saved is Lower than zero
+            color = "#FF0209"
+        elif label == "Energy Saved" and float(value) > 0:
+            color = "#078D4A"
+        
         fig = go.Figure()
 
         fig.add_trace(
@@ -384,6 +390,7 @@ elif st.session_state.page == "dashboard":
                     "prefix": prefix,
                     "suffix": suffix,
                     "font.size": 24,
+                    "font.color": color
                 },
                 title={
                     "text": label,
@@ -589,12 +596,11 @@ elif st.session_state.page == "dashboard":
                 filter_by: the filter to apply to the data (today, this month, or all time)
             
             The function returns a dictionary containing the following data:
-                total_energy_produced: the total energy produced for the selected filter
-                current_energy_produced: the current energy produced (last recorded observation)
                 total_energy_consumed: the total energy consumed for the selected filter
                 current_energy_consumed: the current energy consumed (last recorded observation)
                 num_appliances: the number of appliances for the selected filter
                 df_plot: a pandas DataFrame for plotting appliance consumption
+                energy_saved: The amount of energy saved in %
         """
         
         # Filter by date
@@ -618,15 +624,12 @@ elif st.session_state.page == "dashboard":
 
         energy_data = cursor.fetchall()
 
-        # Calculate totals and currents
-        total_energy_produced = sum(row[5] for row in energy_data)
-        current_energy_produced = energy_data[-1][5] if energy_data else 0
         total_energy_consumed = sum(row[4] for row in energy_data)
         current_energy_consumed = energy_data[-1][4] if energy_data else 0
         num_appliances = len(set(row[2] for row in energy_data))
 
         # Create dataframe for plotting
-        df = pd.DataFrame(energy_data, columns=['EnergyUsageID', 'HomeID', 'ApplianceID', 'DateTime', 'EnergyConsumed', 'EnergyProduced', 'CurrentOutput'])
+        df = pd.DataFrame(energy_data, columns=['EnergyUsageID', 'HomeID', 'ApplianceID', 'DateTime', 'EnergyConsumed', 'CurrentOutput'])
         df['DateTime'] = pd.to_datetime(df['DateTime'])
         
         # Map ApplianceID to Appliance names
@@ -645,31 +648,40 @@ elif st.session_state.page == "dashboard":
             df_plot = df[['Day', 'Energy (kWh)', 'Appliance']]
             x_axis = 'Day'
 
+        # Calculate Energy Saved
+        appliance_energy_consumption = {
+            'Scanfrost Refrigerator': 0.04,
+            'Hisense Deep Freezer': 0.8,
+            'LG Air Conditioner': 0.001
+        }
+
+        # Calculate total energy consumption based on appliance usage
+        total_energy_consumption_from_appliances = sum(
+            appliance_energy_consumption[list(appliance_energy_consumption.keys())[row[2] - 1]] * 1  # assuming 1 hour interval
+            for row in energy_data
+        )
+
+        # Calculate energy saved
+        energy_saved = total_energy_consumption_from_appliances - total_energy_consumed
+
+        # Calculate energy saved percentage
+        energy_saved_percentage = (energy_saved / total_energy_consumption_from_appliances) * 100 if total_energy_consumption_from_appliances != 0 else 0
+
         return {
-            'total_energy_produced': round(float(total_energy_produced), 1),
-            'current_energy_produced': round(float(current_energy_produced), 2),
             'total_energy_consumed': round(float(total_energy_consumed), 1),
-            'current_energy_consumed': round(float(current_energy_consumed), 2),
+            'current_energy_consumed': round(float(current_energy_consumed), 5),
             'num_appliances': int(num_appliances),
             'df_plot': df_plot,
-            'x_axis': x_axis
+            'x_axis': x_axis,
+            'energy_saved': round(float(energy_saved_percentage), 1)
         }
 
     def show_dashboard(data): 
         # =============== Key Statistics =================
         st.markdown("<h3 style='font-size: 20px'>{}</h3>".format("Key Statistics"), unsafe_allow_html=True)
-        cc1, cc2, cc3 = st.columns([3.3,3.3,3.3])
+
+        cc1, cc2 = st.columns([5,5])
         with cc1:
-            plot_metric(
-                "Total Energy Produced",
-                data['total_energy_produced'],
-                prefix="",
-                suffix=" kWh",
-                show_graph=True,
-                color_graph="rgba(0, 104, 201, 0.2)",
-            )
-            plot_gauge(data['current_energy_produced'], "#0068C9", " kWh", "Current Rate", 8)
-        with cc2:
             plot_metric(
                 "Number of Appliances",
                 data['num_appliances'],
@@ -678,7 +690,16 @@ elif st.session_state.page == "dashboard":
                 show_graph=False,
                 color_graph="rgba(255, 242, 175, 20)",
             )
-        with cc3:
+            plot_metric(
+                "Energy Saved",
+                data['energy_saved'],
+                prefix="",
+                suffix="%",
+                show_graph=False,
+                color_graph="rgba(18, 169, 94, 100)",
+            )
+
+        with cc2:
             plot_metric(
                 "Total Energy Consumed",
                 data['total_energy_consumed'],
@@ -687,7 +708,7 @@ elif st.session_state.page == "dashboard":
                 show_graph=True,
                 color_graph="rgba(255, 242, 175, 20)",
             )
-            plot_gauge(data['current_energy_consumed'], "#C7B452", " kWh", "Current Rate", 8)
+            plot_gauge(data['current_energy_consumed'], "#C7B452", " kWh", "Current Rate", 2)
 
         st.write("")
         st.write("")
