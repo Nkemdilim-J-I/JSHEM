@@ -629,7 +629,7 @@ elif st.session_state.page == "dashboard":
         num_appliances = len(set(row[2] for row in energy_data))
 
         # Create dataframe for plotting
-        df = pd.DataFrame(energy_data, columns=['EnergyUsageID', 'HomeID', 'ApplianceID', 'DateTime', 'EnergyConsumed', 'CurrentOutput'])
+        df = pd.DataFrame(energy_data, columns=['EnergyUsageID', 'HomeID', 'ApplianceID', 'DateTime', 'EnergyConsumed', 'EnergyProduced', 'CurrentOutput'])
         df['DateTime'] = pd.to_datetime(df['DateTime'])
         
         # Map ApplianceID to Appliance names
