@@ -107,9 +107,9 @@ def sendmail(type, mail, homename="", homeid="", appliance_name="", appliance_ty
         new_condition (str, optional): New appliance condition. Defaults to "".
     """
     # Email configuratio
-    from_email = "odendavid0@gmail.com"
+    from_email = "j.smarthomesmgt@gmail.com"
     to_email = mail
-    password = "hhpr lmml ulhk qytb"
+    password = "mwkr fkvf gral mlqu"
     image_path = "images/mail.png"
 
     # Set email subject and body based on type
