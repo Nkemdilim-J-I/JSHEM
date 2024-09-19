@@ -1,6 +1,5 @@
 """
-In an environment with streamlit installed,
-Run with `streamlit run App.py`
+In an environment with streamlit installed, Run with `streamlit run App.py`
 """
 
 # Streamlit and Data Visualization
@@ -24,22 +23,19 @@ from email.mime.multipart import MIMEMultipart # For constructing email messages
 import random # For generating random numbers
 from datetime import datetime # For working with dates and times
 import math # For mathematical operations
+import os # communicate with system
 
 # =========== Establish Connection ==========
 try:
-    DATABASE_URL = "postgresql://shems_data_user:O7o0GFLAxWDdn7cO0O81hLtht7qDlIM5@dpg-cr8orodsvqrc739dkr7g-a.oregon-postgres.render.com/shems_data"
-    #os.getenv('DATABASE_URL')
-
+    DATABASE_URL = os.getenv('DATABASE_URL')
     # Parse the URL
     result = urlparse(DATABASE_URL)
-
     # Extract the components
     username = result.username
     password = result.password
     database = result.path[1:]  # remove the leading '/'
     hostname = result.hostname
     port = result.port
-
     # Connect to the PostgreSQL database
     conn = psycopg2.connect(
         dbname=database,
@@ -271,7 +267,6 @@ def register_home(home_id, home_name, email, address="", other=""):
 def check_login(home_name, home_id):
     """
     Checks if a home exists in the database.
-
     Args:
         home_name (str): Name of the home
         home_id (int): Unique home ID
@@ -744,7 +739,6 @@ elif st.session_state.page == "dashboard":
                 WHERE HomeID = {home_id};
             ''')
         energy_data = cursor.fetchall()
-
         total_energy_consumed = sum(row[4] for row in energy_data) # Calculate total energy consumed
 
         # Get the number of appliances for the home
@@ -766,7 +760,13 @@ elif st.session_state.page == "dashboard":
                 LIMIT {num_appliances}
             ) AS LastHourEnergy;
         ''')
-        current_energy_consumed = cursor.fetchone()[0] if cursor.fetchone() else 0
+        
+        current_energy_consumed = cursor.fetchone()[0]
+        if current_energy_consumed == None:
+            current_energy_consumed = 0.0
+        else:
+            pass
+        
         # Count unique appliances
         num_appliances = len(set(row[2] for row in energy_data))
 
