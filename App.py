@@ -793,8 +793,8 @@ elif st.session_state.page == "dashboard":
 
         # Calculate Energy Saved
         appliance_energy_consumption = {
-            'Scanfrost Refrigerator': 0.04,
             'Hisense Deep Freezer': 0.8,
+            'Scanfrost Refrigerator': 0.04,            
             'LG Air Conditioner': 0.001
         }
 
