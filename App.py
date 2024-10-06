@@ -2,6 +2,7 @@
 In an environment with streamlit installed, Run with `streamlit run App.py`
 """
 
+
 # Streamlit and Data Visualization
 import streamlit as st # For building the web application
 import pandas as pd # Data manipulation and analysis
