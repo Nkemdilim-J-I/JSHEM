@@ -27,7 +27,8 @@ import os # communicate with system
 
 # =========== Establish Connection ==========
 try:
-    DATABASE_URL = os.getenv('DATABASE_URL')
+    DATABASE_URL = "postgresql://jshems_user:PZhH15mUYs93mfwMUKdBJKygvHnaFany@dpg-crd0tvaj1k6c73et7n60-a.oregon-postgres.render.com/jshems"
+    #os.getenv('DATABASE_URL')
     # Parse the URL
     result = urlparse(DATABASE_URL)
     # Extract the components
@@ -794,7 +795,7 @@ elif st.session_state.page == "dashboard":
         # Calculate Energy Saved
         appliance_energy_consumption = {
             'Hisense Deep Freezer': 0.8,
-            'Scanfrost Refrigerator': 0.04,            
+            'Scanfrost Refrigerator': 0.04,
             'LG Air Conditioner': 0.001
         }
 
@@ -803,7 +804,8 @@ elif st.session_state.page == "dashboard":
             appliance_energy_consumption[list(appliance_energy_consumption.keys())[row[2] - 1]] * 1  # assuming 1 hour interval
             for row in energy_data
         )
-
+        print(num_appliances)
+        print(total_energy_consumption_from_appliances, total_energy_consumed)
         # Calculate energy saved
         energy_saved = total_energy_consumption_from_appliances - total_energy_consumed
 
